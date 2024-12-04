@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Your Cart</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container py-5">
+    <div class="row justify-content-center">
+      <div class="col-md-8">
+        <div class="card shadow-lg">
+          <div class="card-body">
+            <h5 class="card-title">Your Cart</h5>
+            <div id="cartItems">
+              <!-- Cart items will be dynamically added here -->
+            </div>
+            <hr>
+            <div class="d-flex justify-content-between">
+              <h4>Total:</h4>
+              <h4 id="totalAmount">₹0</h4>
+            </div>
+            <button id="checkoutButton" class="btn btn-primary mt-3">Proceed to Checkout</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script>
+    // Cart items (you can add or modify items dynamically)
+    let cart = [
+      { name: 'Water Overflow Indicator', price: 500, quantity: 1 },
+      { name: 'Arduino', price: 850, quantity: 1 },
+      { name: 'Temperature Sensor', price: 200, quantity: 1 },
+      { name: 'ESP32', price: 380, quantity: 1 }
+    ];
+
+    // Function to render the cart
+    function renderCart() {
+      const cartItemsContainer = $('#cartItems');
+      let totalAmount = 0;
+      cartItemsContainer.empty();
+
+      cart.forEach((item, index) => {
+        const itemTotal = item.price * item.quantity;
+        totalAmount += itemTotal;
+        cartItemsContainer.append(`
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <span>${item.name}</span>
+            <span>₹${item.price}</span>
+            <input type="number" min="1" value="${item.quantity}" data-index="${index}" class="quantity-input" style="width: 60px;">
+            <span>₹${itemTotal}</span>
+            <button class="btn btn-danger btn-sm remove-item" data-index="${index}">Remove</button>
+          </div>
+        `);
+      });
+
+      // Update total amount
+      $('#totalAmount').text(`₹${totalAmount}`);
+      return totalAmount;
+    }
+
+    // Call renderCart function to display cart items and total
+    let totalAmount = renderCart();
+
+    // Event listener for quantity changes
+    $(document).on('input', '.quantity-input', function () {
+      const index = $(this).data('index');
+      const newQuantity = parseInt($(this).val(), 10);
+      
+      if (newQuantity >= 1) {
+        cart[index].quantity = newQuantity; // Update quantity in the cart
+        totalAmount = renderCart(); // Re-render the cart with updated total
+      }
+    });
+
+    // Event listener for removing items
+    $(document).on('click', '.remove-item', function () {
+      const index = $(this).data('index');
+      cart.splice(index, 1); // Remove the item from the cart array
+      totalAmount = renderCart(); // Re-render the cart with the updated item list
+    });
+
+    $('#checkoutButton').on('click', function () {
+      $.ajax({
+        url: '/create-order',
+        method: 'POST',
+        data: { totalAmount: totalAmount }, // Pass the dynamic total amount
+        success: function (response) {
+          var options = {
+            key: "rzp_test_JllmlG2FU6eGXY", // Razorpay Key ID
+            amount: response.amount, // Amount in paise
+            currency: response.currency,
+            name: "Your Store",
+            description: "Order Payment",
+            order_id: response.id, // Order ID from Razorpay API
+            handler: function (response) {
+              $.ajax({
+                url: '/payment-success',
+                method: 'POST',
+                data: {
+                  payment_id: response.razorpay_payment_id,
+                  order_id: response.razorpay_order_id,
+                  signature: response.razorpay_signature,
+                },
+                success: function (data) {
+                  console.log('Payment success handler response:', data);
+                  window.location.href = '/payment-success'; // Redirect to success page
+                },
+                error: function (error) {
+                  console.log('Error in payment success handler:', error);
+                }
+              });
+            },
+            prefill: {
+              name: "Customer",
+              email: "customer@example.com",
+              contact: "9999999999",
+            },
+            theme: {
+              color: "#3399cc"
+            }
+          };
+
+          var rzp = new Razorpay(options);
+          rzp.open();
+        },
+        error: function (error) {
+          alert("Payment creation failed!");
+        }
+      });
+    });
+  </script>
+</body>
+</html>

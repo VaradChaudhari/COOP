@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Product Store</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- Navigation Bar -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="/">Product Store</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item">
+            <a class="nav-link" href="/cart" id="cartLink">Cart (<span id="cartCount">0</span>)</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Product Display -->
+  <div class="container py-5">
+    <h3>Our Products</h3>
+    <div class="row">
+      <!-- Product 1: Water Overflow Indicator -->
+      <div class="col-md-4 mb-4">
+        <div class="card">
+          <img src="/public/water_overflow_indicator.jpg" class="card-img-top" alt="Water Overflow Indicator">
+          <div class="card-body">
+            <h5 class="card-title">Water Overflow Indicator - ₹500</h5>
+            <p class="card-text">A device to help you monitor and prevent water overflow in tanks.</p>
+            <button class="btn btn-primary add-to-cart" data-product-id="water_overflow_indicator" data-price="500">Add to Cart</button>
+          </div>
+        </div>
+      </div>
+      <!-- Product 2: Arduino -->
+      <div class="col-md-4 mb-4">
+        <div class="card">
+          <img src="/public/arduino.jpg" class="card-img-top" alt="Arduino">
+          <div class="card-body">
+            <h5 class="card-title">Arduino - ₹850</h5>
+            <p class="card-text">A versatile microcontroller board for building electronic projects.</p>
+            <button class="btn btn-primary add-to-cart" data-product-id="arduino" data-price="850">Add to Cart</button>
+          </div>
+        </div>
+      </div>
+      <!-- Product 3: Temperature Sensor -->
+      <div class="col-md-4 mb-4">
+        <div class="card">
+          <img src="/public/temperature_sensor.jpg" class="card-img-top" alt="Temperature Sensor">
+          <div class="card-body">
+            <h5 class="card-title">Temperature Sensor - ₹200</h5>
+            <p class="card-text">A temperature sensor for your electronics projects.</p>
+            <button class="btn btn-primary add-to-cart" data-product-id="temperature_sensor" data-price="200">Add to Cart</button>
+          </div>
+        </div>
+      </div>
+      <!-- Product 4: ESP32 -->
+      <div class="col-md-4 mb-4">
+        <div class="card">
+          <img src="/Public/esp32.jpg" class="card-img-top" alt="ESP32">
+          <div class="card-body">
+            <h5 class="card-title">ESP32 - ₹380</h5>
+            <p class="card-text">A powerful microcontroller with Wi-Fi and Bluetooth capabilities.</p>
+            <button class="btn btn-primary add-to-cart" data-product-id="esp32" data-price="380">Add to Cart</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- jQuery Script -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+  <!-- Razorpay Checkout Script -->
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+  <script>
+    let cart = JSON.parse(localStorage.getItem('cart')) || [];  // Get cart from localStorage or initialize as empty array
+
+    // Handle Add to Cart button click
+    $('.add-to-cart').on('click', function () {
+      const productId = $(this).data('product-id');
+      const price = parseInt($(this).data('price')); // Convert price to integer
+
+      // Check if the product is already in the cart
+      const existingProductIndex = cart.findIndex(item => item.id === productId);
+      
+      if (existingProductIndex > -1) {
+        // If product already exists, increase quantity
+        cart[existingProductIndex].quantity += 1;
+      } else {
+        // If product is new, add it to cart
+        cart.push({
+          id: productId,
+          price: price,
+          quantity: 1,
+        });
+      }
+
+      // Save cart to localStorage
+      localStorage.setItem('cart', JSON.stringify(cart));
+
+      // Update cart count in navbar
+      updateCartCount();
+    });
+
+    // Function to update the cart count in navbar
+    function updateCartCount() {
+      $('#cartCount').text(cart.length);
+    }
+
+    // Initialize the cart count on page load
+    updateCartCount();
+  </script>
+</body>
+</html>
